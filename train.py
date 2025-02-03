@@ -304,7 +304,6 @@ class LoraTraininginComfyAdvanced:
             "networkmodule": (["networks.lora", "lycoris.kohya"], ),
             "networkdimension": ("INT", {"default": 32, "min":0}),
             "networkalpha": ("INT", {"default":32, "min":0}),
-            "trainingresolution": ("INT", {"default":512, "step":8}),
             "resolution_width": ("INT", {"default": 512, "step": 64}),
             "resolution_height": ("INT", {"default": 512, "step": 64}),
             "data_path": ("STRING", {"default": "Insert path of image folders"}),
