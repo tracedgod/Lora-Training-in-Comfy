@@ -1,10 +1,14 @@
 # Original LoRA train script by @Akegarasu ; rewritten in Python by LJRE.
 import subprocess
 import os
+import sys
 import folder_paths
 import random
 from comfy import model_management
 import torch
+
+os.environ['HF_HOME'] = "huggingface"
+os.environ['XFORMERS_FORCE_DISABLE_TRITON'] = "1"
 
 #Train data path | 设置训练用模型、图片
 #pretrained_model = "E:\AI-Image\ComfyUI_windows_portable_nvidia_cu121_or_cpu\ComfyUI_windows_portable\ComfyUI\models\checkpoints\MyAnimeModel.ckpt"
@@ -71,19 +75,65 @@ use_wandb = 0 # enable wandb logging | 启用wandb远程记录功能
 wandb_api_key = "" # wandb api key | API，通过 https://wandb.ai/authorize 获取
 log_tracker_name = "" # wandb log tracker name | wandb项目名称,留空则为"network_train"
 
-
 #output_dir = ''
-logging_dir = './logs'
+logging_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
 log_prefix = ''
 mixed_precision = 'fp16'
 caption_extension = '.txt'
 
-
-os.environ['HF_HOME'] = "huggingface"
-os.environ['XFORMERS_FORCE_DISABLE_TRITON'] = "1"
 ext_args = []
-launch_args = []
 
+def FreeMemory():
+    '''Frees up memory by unloading all currently loaded models.'''
+    try:
+        loaded_models = model_management.current_loaded_models
+
+        if not loaded_models:
+            return  # No models to unload
+    
+        # Unload all models
+        for model in loaded_models:
+            model.model_unload()
+
+        loaded_models.clear()
+
+        # Clear cache
+        model_management.soft_empty_cache()
+    
+    except Exception as e:
+        print(f"Warning: Failed to free memory before training: {e}")
+
+def GetTrainScript(script_name: str):
+    """
+    Gets the full path to the specified training script.
+
+    Parameters:
+        script_name (str): The name of the training script without the `.py` extension.
+
+    Returns:
+        tuple: (Full script path, script directory) if found.
+        tuple: (None, script directory) if the script file does not exist.
+    """
+    try:
+        # Validate script_name
+        if not isinstance(script_name, str) or not script_name.strip():
+            raise ValueError("Invalid script_name: Must be a non-empty string.")
+
+        # Get directory paths
+        current_file_dir = os.path.dirname(os.path.abspath(__file__))
+        sd_script_dir = os.path.join(current_file_dir, "sd-scripts")
+        train_script_path = os.path.join(sd_script_dir, f"{script_name}.py")
+
+        # Check if the script file exists
+        if not os.path.isfile(train_script_path):
+            print(f"Warning: Training script '{train_script_path}' not found.")
+            return None, sd_script_dir
+
+        return train_script_path, sd_script_dir
+
+    except Exception as e:
+        print(f"Error in GetTrainScript(): {e}")
+        return None, None
 
 class LoraTraininginComfy:
     def __init__(self):
@@ -94,13 +144,13 @@ class LoraTraininginComfy:
          return {
             "required": {
             "ckpt_name": (folder_paths.get_filename_list("checkpoints"), ),
-            #"theseed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+            "model_type": (["sd1.5", "sd2.0", "sdxl"],),
+            "resolution_width": ("INT", {"default": 512, "step": 64}),
+            "resolution_height": ("INT", {"default": 512, "step": 64}),
             "data_path": ("STRING", {"default": "Insert path of image folders"}),
 			"batch_size": ("INT", {"default": 1, "min":1}),
             "max_train_epoches": ("INT", {"default":10, "min":1}),
             "save_every_n_epochs": ("INT", {"default":10, "min":1}),
-            #"lr": ("INT": {"default":"1e-4"}),
-            #"optimizer_type": ("STRING", {["AdamW8bit", "Lion8bit", "SGDNesterov8bit", "AdaFactor", "prodigy"]}),
             "output_name": ("STRING", {"default":'Desired name for LoRA.'}),
             "clip_skip": ("INT", {"default":2, "min":1}),
             "output_dir": ("STRING", {"default":'models/loras'}),
@@ -109,46 +159,43 @@ class LoraTraininginComfy:
 
     RETURN_TYPES = ()
     RETURN_NAMES = ()
-
     FUNCTION = "loratraining"
-
     OUTPUT_NODE = True
-
     CATEGORY = "LJRE/LORA"
-
     
-    def loratraining(self, ckpt_name, data_path, batch_size, max_train_epoches, save_every_n_epochs, output_name, clip_skip, output_dir):
+    def loratraining(self, ckpt_name, resolution_width, resolution_height, model_type, data_path, batch_size, max_train_epoches, save_every_n_epochs, output_name, clip_skip, output_dir):
         #free memory first of all
-        loadedmodels=model_management.current_loaded_models
-        unloaded_model = False
-        for i in range(len(loadedmodels) -1, -1, -1):
-            m = loadedmodels.pop(i)
-            m.model_unload()
-            del m
-            unloaded_model = True
-        if unloaded_model:
-            model_management.soft_empty_cache()
-            
-        print(model_management.current_loaded_models)
-        #loadedmodel = model_management.LoadedModel()
-        #loadedmodel.model_unload(self, current_loaded_models)
+        FreeMemory()
+
         #transform backslashes into slashes for user convenience.
         train_data_dir = data_path.replace( "\\", "/")
-        #print(train_data_dir)
+        
+        # Validate inputs
+        if data_path == "Insert path of image folders":
+            raise ValueError("Please insert the path of the image folders.")
+        if output_name == 'Desired name for LoRA.':
+            raise ValueError("Please insert the desired name for LoRA.")
 
         #generates a random seed
         theseed = random.randint(0, 2^32-1)
-        
+
+        resolution = f"{resolution_width},{resolution_height}"
+
+        # Model-specific args
+        if model_type == "sd2.0":
+            ext_args.append("--v2")
+        elif model_type == "sd1.5":
+            ext_args.append(f"--clip_skip={clip_skip}")
+        elif model_type == "sdxl":
+            train_script_name = "sdxl_train_network"
+        else:
+            train_script_name = "train_network"
+
         if multi_gpu:
-            launch_args.append("--multi_gpu")
+            ext_args.append("--multi_gpu")
 
         if lowram:
             ext_args.append("--lowram")
-
-        if is_v2_model:
-            ext_args.append("--v2")
-        else:
-            ext_args.append(f"--clip_skip={clip_skip}")
 
         if parameterization:
             ext_args.append("--v_parameterization")
@@ -208,29 +255,42 @@ class LoraTraininginComfy:
         else:
             ext_args.append("--log_with=tensorboard")
 
-        launchargs=' '.join(launch_args)
-        extargs=' '.join(ext_args)
-
         pretrained_model = folder_paths.get_full_path("checkpoints", ckpt_name)
-        
-        #Looking for the training script.
-        progpath = os.getcwd()
-        nodespath=''
-        for dirpath, dirnames, filenames in os.walk(progpath):
-             if 'sd-scripts' in dirnames:
-               nodespath= dirpath + '/sd-scripts/train_network.py'
-               print(nodespath)
 
-        nodespath = nodespath.replace( "\\", "/")
-        command = "python -m accelerate.commands.launch " + launchargs + f'--num_cpu_threads_per_process=8 "{nodespath}" --enable_bucket --pretrained_model_name_or_path={pretrained_model} --train_data_dir="{train_data_dir}" --output_dir="{output_dir}" --logging_dir="./logs" --log_prefix={output_name} --resolution={resolution} --network_module={network_module} --max_train_epochs={max_train_epoches} --learning_rate={lr} --unet_lr={unet_lr} --text_encoder_lr={text_encoder_lr} --lr_scheduler={lr_scheduler} --lr_warmup_steps={lr_warmup_steps} --lr_scheduler_num_cycles={lr_restart_cycles} --network_dim={network_dim} --network_alpha={network_alpha} --output_name={output_name} --train_batch_size={batch_size} --save_every_n_epochs={save_every_n_epochs} --mixed_precision="fp16" --save_precision="fp16" --seed={theseed} --cache_latents --prior_loss_weight=1 --max_token_length=225 --caption_extension=".txt" --save_model_as={save_model_as} --min_bucket_reso={min_bucket_reso} --max_bucket_reso={max_bucket_reso} --keep_tokens={keep_tokens} --xformers --shuffle_caption ' + extargs
-        #print(command)
-        subprocess.run(command, shell=True)
-        print("Train finished")
-        #input()
+        # Get the training script path
+        nodespath, sd_script_dir = GetTrainScript(train_script_name)
+        if not os.path.exists(nodespath):
+            raise FileNotFoundError(f"Training script not found at {nodespath}")
+
+        command = (
+            f"{sys.executable} -m accelerate.commands.launch "
+            f"--num_cpu_threads_per_process=8 \"{nodespath}\" "
+            f"--enable_bucket --pretrained_model_name_or_path={pretrained_model} "
+            f"--train_data_dir=\"{train_data_dir}\" --output_dir=\"{output_dir}\" "
+            f"--logging_dir=\"{logging_dir}\" --log_prefix={output_name} "
+            f"--resolution={resolution} --network_module={network_module} "
+            f"--max_train_epochs={max_train_epoches} --learning_rate={lr} "
+            f"--unet_lr={unet_lr} --text_encoder_lr={text_encoder_lr} "
+            f"--lr_scheduler={lr_scheduler} --lr_warmup_steps={lr_warmup_steps} "
+            f"--lr_scheduler_num_cycles={lr_restart_cycles} --network_dim={network_dim} "
+            f"--network_alpha={network_alpha} --output_name={output_name} "
+            f"--train_batch_size={batch_size} --save_every_n_epochs={save_every_n_epochs} "
+            f"--mixed_precision=\"fp16\" --save_precision=\"fp16\" --seed={theseed} "
+            f"--cache_latents --prior_loss_weight=1 --max_token_length=225 "
+            f"--caption_extension=\".txt\" --save_model_as={save_model_as} "
+            f"--min_bucket_reso={min_bucket_reso} --max_bucket_reso={max_bucket_reso} "
+            f"--keep_tokens={keep_tokens} --xformers --shuffle_caption "
+        )
+
+        # Add additional arguments
+        if ext_args:
+            command += " " + " ".join(ext_args)
+
+        print(f"Executing command: {command}")
+        subprocess.run(command, shell=True, cwd=sd_script_dir)
+        print(f"Train finished")
         return ()
 
-        
-        
 class LoraTraininginComfyAdvanced:
     def __init__(self):
         pass
@@ -240,11 +300,13 @@ class LoraTraininginComfyAdvanced:
          return {
             "required": {
             "ckpt_name": (folder_paths.get_filename_list("checkpoints"), ),
-            "v2": (["No", "Yes"], ),
+            "model_type": (["sd1.5", "sd2.0", "sdxl"],),
             "networkmodule": (["networks.lora", "lycoris.kohya"], ),
             "networkdimension": ("INT", {"default": 32, "min":0}),
             "networkalpha": ("INT", {"default":32, "min":0}),
             "trainingresolution": ("INT", {"default":512, "step":8}),
+            "resolution_width": ("INT", {"default": 512, "step": 64}),
+            "resolution_height": ("INT", {"default": 512, "step": 64}),
             "data_path": ("STRING", {"default": "Insert path of image folders"}),
 			"batch_size": ("INT", {"default": 1, "min":1}),
             "max_train_epoches": ("INT", {"default":10, "min":1}),
@@ -266,77 +328,46 @@ class LoraTraininginComfyAdvanced:
 
     RETURN_TYPES = ()
     RETURN_NAMES = ()
-
     FUNCTION = "loratraining"
-
     OUTPUT_NODE = True
-
     CATEGORY = "LJRE/LORA"
 
-    def loratraining(self, ckpt_name, v2, networkmodule, networkdimension, networkalpha, trainingresolution, data_path, batch_size, max_train_epoches, save_every_n_epochs, keeptokens, minSNRgamma, learningrateText, learningrateUnet, learningRateScheduler, lrRestartCycles, optimizerType, output_name, algorithm, networkDropout, clip_skip, output_dir):
+    def loratraining(self, ckpt_name, model_type, networkmodule, networkdimension, networkalpha, resolution_width, resolution_height, data_path, batch_size, max_train_epoches, save_every_n_epochs, keeptokens, minSNRgamma, learningrateText, learningrateUnet, learningRateScheduler, lrRestartCycles, optimizerType, output_name, algorithm, networkDropout, clip_skip, output_dir):
         #free memory first of all
-        loadedmodels=model_management.current_loaded_models
-        unloaded_model = False
-        for i in range(len(loadedmodels) -1, -1, -1):
-            m = loadedmodels.pop(i)
-            m.model_unload()
-            del m
-            unloaded_model = True
-        if unloaded_model:
-            model_management.soft_empty_cache()
-            
-        #print(model_management.current_loaded_models)
-        #loadedmodel = model_management.LoadedModel()
-        #loadedmodel.model_unload(self, current_loaded_models)
+        FreeMemory()
         
         #transform backslashes into slashes for user convenience.
         train_data_dir = data_path.replace( "\\", "/")
-        
-        
-        
-        #ADVANCED parameters initialization
-        is_v2_model=0
-        network_moduke="networks.lora"
-        network_dim=32
-        network_alpha=32
-        resolution = "512,512"
-        keep_tokens = 0
-        min_snr_gamma = 0
-        unet_lr = "1e-4"
-        text_encoder_lr = "1e-5"
-        lr_scheduler = "cosine_with_restarts"
-        lr_restart_cycles = 0
-        optimizer_type = "AdamW8bit"
-        algo= "lora"
-        dropout = 0.0
-        
-        if v2 == "Yes":
-            is_v2_model = 1
-        
-        network_module = networkmodule
-        network_dim = networkdimension
-        network_alpha = networkalpha
-        resolution = f"{trainingresolution},{trainingresolution}"
-        
-        formatted_value = str(format(learningrateText, "e")).rstrip('0').rstrip()
-        text_encoder_lr = ''.join(c for c in formatted_value if not (c == '0'))
-        
-        formatted_value2 = str(format(learningrateUnet, "e")).rstrip('0').rstrip()
-        unet_lr = ''.join(c for c in formatted_value2 if not (c == '0'))
-        
-        keep_tokens = keeptokens
+
+        # Validate inputs
+        if data_path == "Insert path of image folders":
+            raise ValueError("Please insert the path of the image folders.")
+        if output_name == 'Desired name for LoRA.':
+            raise ValueError("Please insert the desired name for LoRA.")
+
+        #generates a random seed
+        theseed = random.randint(0, 2^32-1)
+
+        # ADVANCED parameters
+        network_module=networkmodule
+        resolution = f"{resolution_width},{resolution_height}"        
         min_snr_gamma = minSNRgamma
-        lr_scheduler = learningRateScheduler
-        lr_restart_cycles = lrRestartCycles
         optimizer_type = optimizerType
         algo = algorithm
         dropout = f"{networkDropout}"
 
-        #generates a random seed
-        theseed = random.randint(0, 2^32-1)
-        
+        # Model-specific args
+        if model_type == "sd2.0":
+            ext_args.append("--v2")
+        elif model_type == "sd1.5":
+            ext_args.append(f"--clip_skip={clip_skip}")
+        elif model_type == "sdxl":
+            train_script_name = "sdxl_train_network"
+        else:
+            train_script_name = "train_network"
+
         if multi_gpu:
-            launch_args.append("--multi_gpu")
+            ext_args.append("--multi_gpu")
 
         if lowram:
             ext_args.append("--lowram")
@@ -404,29 +435,42 @@ class LoraTraininginComfyAdvanced:
         else:
             ext_args.append("--log_with=tensorboard")
 
-        launchargs=' '.join(launch_args)
-        extargs=' '.join(ext_args)
-
         pretrained_model = folder_paths.get_full_path("checkpoints", ckpt_name)
-        
-        #Looking for the training script.
-        progpath = os.getcwd()
-        nodespath=''
-        for dirpath, dirnames, filenames in os.walk(progpath):
-             if 'sd-scripts' in dirnames:
-               nodespath= dirpath + '/sd-scripts/train_network.py'
-               print(nodespath)
 
-        nodespath = nodespath.replace( "\\", "/")
+        # Get the training script path
+        nodespath, sd_script_dir = GetTrainScript(train_script_name)
+        if not os.path.exists(nodespath):
+            raise FileNotFoundError(f"Training script not found at {nodespath}")
         
-        command = "python -m accelerate.commands.launch " + launchargs + f'--num_cpu_threads_per_process=8 "custom_nodes/Lora-Training-in-Comfy/sd-scripts/train_network.py" --enable_bucket --pretrained_model_name_or_path={pretrained_model} --train_data_dir="{train_data_dir}" --output_dir="{output_dir}" --logging_dir="./logs" --log_prefix={output_name} --resolution={resolution} --network_module={network_module} --max_train_epochs={max_train_epoches} --learning_rate={lr} --unet_lr={unet_lr} --text_encoder_lr={text_encoder_lr} --lr_scheduler={lr_scheduler} --lr_warmup_steps={lr_warmup_steps} --lr_scheduler_num_cycles={lr_restart_cycles} --network_dim={network_dim} --network_alpha={network_alpha} --output_name={output_name} --train_batch_size={batch_size} --save_every_n_epochs={save_every_n_epochs} --mixed_precision="fp16" --save_precision="fp16" --seed={theseed} --cache_latents --prior_loss_weight=1 --max_token_length=225 --caption_extension=".txt" --save_model_as={save_model_as} --min_bucket_reso={min_bucket_reso} --max_bucket_reso={max_bucket_reso} --keep_tokens={keep_tokens} --xformers --shuffle_caption ' + extargs
-        #print(command)
-        subprocess.run(command, shell=True)
+        command = (
+            f"{sys.executable} -m accelerate.commands.launch "
+            f"--num_cpu_threads_per_process=8 \"{nodespath}\" "
+            f"--enable_bucket --pretrained_model_name_or_path={pretrained_model} "
+            f"--train_data_dir=\"{train_data_dir}\" --output_dir=\"{output_dir}\" "
+            f"--logging_dir=\"{logging_dir}\" --log_prefix={output_name} "
+            f"--resolution={resolution} --network_module={networkmodule} "
+            f"--max_train_epochs={max_train_epoches} --learning_rate={lr} "
+            f"--unet_lr={learningrateUnet} --text_encoder_lr={learningrateText} "
+            f"--lr_scheduler={learningRateScheduler} --lr_warmup_steps={lr_warmup_steps} "
+            f"--lr_scheduler_num_cycles={lrRestartCycles} --network_dim={networkdimension} "
+            f"--network_alpha={networkalpha} --output_name={output_name} "
+            f"--train_batch_size={batch_size} --save_every_n_epochs={save_every_n_epochs} "
+            f"--mixed_precision=\"fp16\" --save_precision=\"fp16\" --seed={theseed} "
+            f"--cache_latents --prior_loss_weight=1 --max_token_length=225 "
+            f"--caption_extension=\".txt\" --save_model_as={save_model_as} "
+            f"--min_bucket_reso={min_bucket_reso} --max_bucket_reso={max_bucket_reso} "
+            f"--keep_tokens={keeptokens} --xformers --shuffle_caption "
+        )
+
+        # Add additional arguments
+        if ext_args:
+            command += " " + " ".join(ext_args)
+
+        print(f"Executing command: {command}")
+        subprocess.run(command, shell=True, cwd=sd_script_dir)
         print("Train finished")
-        #input()
         return ()
-        
-        
+    
 class TensorboardAccess:
     def __init__(self):
         pass
@@ -441,14 +485,11 @@ class TensorboardAccess:
 
     RETURN_TYPES = ()
     RETURN_NAMES = ()
-
     FUNCTION = "opentensorboard"
-
     OUTPUT_NODE = True
-
     CATEGORY = "LJRE/LORA"
 
     def opentensorboard(self):
-        command = 'tensorboard --logdir="logs"'
+        command = 'tensorboard --logdir="{logging_dir}"'
         subprocess.Popen(command, shell=True)
         return()

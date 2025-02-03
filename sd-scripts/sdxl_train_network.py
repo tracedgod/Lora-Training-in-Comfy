@@ -7,9 +7,12 @@ try:
         ipex_init()
 except Exception:
     pass
+import os
+import sys
 from library import sdxl_model_util, sdxl_train_util, train_util
 import train_network
 
+sys.path.append(os.path.dirname(__file__))
 
 class SdxlNetworkTrainer(train_network.NetworkTrainer):
     def __init__(self):

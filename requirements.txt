@@ -1,5 +1,5 @@
-accelerate==0.23.0
-transformers==4.30.2
+accelerate
+transformers
 diffusers[torch]
 ftfy
 opencv-python
@@ -20,7 +20,7 @@ scipy
 requests
 pillow
 numpy
-gradio==3.41.2
+gradio
 fastapi
 uvicorn
 lion-pytorch

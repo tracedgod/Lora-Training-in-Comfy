@@ -46,6 +46,7 @@ from library.custom_train_functions import (
     apply_debiased_estimation,
 )
 
+sys.path.append(os.path.dirname(__file__))
 
 class NetworkTrainer:
     def __init__(self):
