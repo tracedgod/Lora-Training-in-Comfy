@@ -1,0 +1,15 @@
+[project]
+name = "Lora-Training-in-Comfy"
+description = "This custom node lets you train LoRA directly in ComfyUI! By default, it saves directly in your ComfyUI lora folder. That means you just have to refresh after training (...and select the LoRA) to test it! Making LoRA has never been easier!"
+version = "1.0.0"
+license = { file = "LICENSE" }
+dependencies = ["accelerate", "transformers", "diffusers[torch]", "ftfy", "opencv-python", "einops", "pytorch-lightning", "tensorboard", "safetensors", "altair", "easygui", "toml", "voluptuous", "huggingface-hub", "rich", "pandas", "scipy", "requests", "pillow", "numpy", "gradio", "fastapi", "uvicorn", "lion-pytorch", "lycoris-lora", "prodigyopt", "dadaptation", "wandb", "httpx", "xformers", "bitsandbytes", "imagesize", "open-clip-torch", "sentencepiece"]
+
+[project.urls]
+Repository = "https://github.com/LarryJane491/Lora-Training-in-Comfy"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = "LarryJane491"
+DisplayName = "Lora-Training-in-Comfy"
+Icon = ""
