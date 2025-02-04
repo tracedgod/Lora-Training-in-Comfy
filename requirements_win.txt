@@ -39,5 +39,3 @@ imagesize
 open-clip-torch
 # for T5XXL tokenizer (SD3/FLUX)
 sentencepiece
-# for kohya_ss library
--e ./sd-scripts
