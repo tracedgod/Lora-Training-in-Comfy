@@ -144,7 +144,7 @@ class LoraTraininginComfy:
          return {
             "required": {
             "ckpt_name": (folder_paths.get_filename_list("checkpoints"), ),
-            "model_type": (["sd1.5", "sd2.0", "sdxl"],),
+            "model_type": (["sd1.5", "sd2.0", "sdxl", "sd3", "flux"],),
             "resolution_width": ("INT", {"default": 512, "step": 64}),
             "resolution_height": ("INT", {"default": 512, "step": 64}),
             "data_path": ("STRING", {"default": "Insert path of image folders"}),
@@ -188,6 +188,10 @@ class LoraTraininginComfy:
             ext_args.append(f"--clip_skip={clip_skip}")
         elif model_type == "sdxl":
             train_script_name = "sdxl_train_network"
+        elif model_type == "sd3":
+            train_script_name = "sd3_train_network"
+        elif model_type == "flux":
+            train_script_name = "flux_train_network"
         else:
             train_script_name = "train_network"
 
@@ -300,7 +304,7 @@ class LoraTraininginComfyAdvanced:
          return {
             "required": {
             "ckpt_name": (folder_paths.get_filename_list("checkpoints"), ),
-            "model_type": (["sd1.5", "sd2.0", "sdxl"],),
+            "model_type": (["sd1.5", "sd2.0", "sdxl", "sd3", "flux"],),
             "networkmodule": (["networks.lora", "lycoris.kohya"], ),
             "networkdimension": ("INT", {"default": 32, "min":0}),
             "networkalpha": ("INT", {"default":32, "min":0}),
@@ -362,6 +366,10 @@ class LoraTraininginComfyAdvanced:
             ext_args.append(f"--clip_skip={clip_skip}")
         elif model_type == "sdxl":
             train_script_name = "sdxl_train_network"
+        elif model_type == "sd3":
+            train_script_name = "sd3_train_network"
+        elif model_type == "flux":
+            train_script_name = "flux_train_network"
         else:
             train_script_name = "train_network"
 

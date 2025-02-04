@@ -12,7 +12,6 @@ easygui
 toml
 voluptuous
 huggingface-hub
-open-clip-torch
 # extra
 rich
 pandas
@@ -32,4 +31,11 @@ httpx
 xformers
 # bitsandbytes
 bitsandbytes
+# for image utils
 imagesize
+# open clip for SDXL
+open-clip-torch
+# for T5XXL tokenizer (SD3/FLUX)
+sentencepiece
+# for kohya_ss library
+-e ./sd-scripts

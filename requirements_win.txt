@@ -33,3 +33,11 @@ xformers
 # bitsandbytes
 --index-url https://jihulab.com/api/v4/projects/140618/packages/pypi/simple
 bitsandbytes
+# for image utils
+imagesize
+# open clip for SDXL
+open-clip-torch
+# for T5XXL tokenizer (SD3/FLUX)
+sentencepiece
+# for kohya_ss library
+-e ./sd-scripts
