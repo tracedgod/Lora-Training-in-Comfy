@@ -172,7 +172,7 @@ class LoraTraininginComfy:
             "resolution_height": ("INT", {"default": 1024, "step": 64, "tooltip": "Y resolution value"}),
             "data_path": ("STRING", {"default": "Insert path of image folders"}),
 			"batch_size": ("INT", {"default": 1, "min":1}),
-            "max_train_epoches": ("INT", {"default":10, "min":1, "tooltip": "Max epochs to run during training session."}),
+            "max_train_epochs": ("INT", {"default":10, "min":1, "tooltip": "Max epochs to run during training session."}),
             "save_every_n_epochs": ("INT", {"default":10, "min":1, "tooltip": "How many epochs to run before saving a copy of the LoRA."}),
             "output_name": ("STRING", {"default":'Desired name for LoRA.'}),
             "clip_skip": ("INT", {"default":2, "min":1, "tooltip": "Controls how early the processing of prompt by clip network should be stopped (Option is ignored for sdxl)."}),
@@ -189,7 +189,7 @@ class LoraTraininginComfy:
     OUTPUT_NODE = True
     CATEGORY = "LJRE/LORA"
     
-    def loratraining(self, ckpt_name, model_type, resolution_width, resolution_height, data_path, batch_size, max_train_epoches, save_every_n_epochs, output_name, clip_skip, output_dir, mixed_precision, dynamo_backend, multi_gpu):
+    def loratraining(self, ckpt_name, model_type, resolution_width, resolution_height, data_path, batch_size, max_train_epochs, save_every_n_epochs, output_name, clip_skip, output_dir, mixed_precision, dynamo_backend, multi_gpu):
         #free memory first of all
         TrainingUtils.free_memory()
         launch_args.clear()
@@ -255,7 +255,7 @@ class LoraTraininginComfy:
             f"--logging_dir={logging_dir}",
             f"--log_prefix={output_name}"
             f"--train_batch_size={batch_size}",
-            f"--max_train_epoches={max_train_epoches}",
+            f"--max_train_epochs={max_train_epochs}",
             f"--save_every_n_epochs={save_every_n_epochs}",
             "--optimizer_type=AdamW8bit",
             "--learning_rate=1e-4",
@@ -274,7 +274,7 @@ class LoraTraininginComfy:
             "--max_token_length=225",
             "--caption_extension=.txt",
             "--xformers",
-            "keep_tokens"
+            "keep_tokens",
             "--shuffle_caption",
             "--enable_bucket",
             "--no_metadata",
