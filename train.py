@@ -138,9 +138,9 @@ class TrainingUtils:
             # Check if the script file exists
             if not os.path.isfile(train_script_path):
                 print(f"Warning: Training script '{train_script_path}' not found.")
-                return None, sd_script_dir
+                return None
 
-            return train_script_path, sd_script_dir
+            return train_script_path
 
         except Exception as e:
             print(f"Error in get_train_script(): {e}")
