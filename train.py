@@ -167,7 +167,7 @@ class LoraTraininginComfy:
          return {
             "required": {
             "ckpt_name": (folder_paths.get_filename_list("checkpoints"), ),
-            "model_type": ("STRING", {"default": "sd1.5", "choices": ["sd1.5", "sd2.0", "sdxl", "sd3", "flux"], "tooltip": "The type of base model to train the LoRA with."},),
+            "model_type": ({"default": "sd1.5", "choices": ["sd1.5", "sd2.0", "sdxl", "sd3", "flux"], "tooltip": "The type of base model to train the LoRA with."},),
             "resolution_width": ("INT", {"default": 1024, "step": 64, "tooltip": "X resolution value"}),
             "resolution_height": ("INT", {"default": 1024, "step": 64, "tooltip": "Y resolution value"}),
             "data_path": ("STRING", {"default": "Insert path of image folders"}),
@@ -176,9 +176,9 @@ class LoraTraininginComfy:
             "save_every_n_epochs": ("INT", {"default":10, "min":1, "tooltip": "How many epochs to run before saving a copy of the LoRA."}),
             "output_name": ("STRING", {"default":'Desired name for LoRA.'}),
             "clip_skip": ("INT", {"default":2, "min":1, "tooltip": "Controls how early the processing of prompt by clip network should be stopped (Option is ignored for sdxl)."}),
-            "mixed_precision": ("STRING", {"default": "no", "choices": ["no", "fp16", "bf16"], "tooltip": "Use mixed precision training. Choose between fp16 and bf16 training. NOTE: bf16 training is only supported on Nvidia Ampere and up GPUs + PyTorch v1.10 or later!"}),
+            "mixed_precision": ({"default": "no", "choices": ["no", "fp16", "bf16"], "tooltip": "Use mixed precision training. Choose between fp16 and bf16 training. NOTE: bf16 training is only supported on Nvidia Ampere and up GPUs + PyTorch v1.10 or later!"}),
             "output_dir": ("STRING", {"default":'models/loras'}),
-            "dynamo_backend": ("STRING", {"default": "no", "choices": ["no", "eager", "aot_eager", "inductor", "aot_ts_nvfuser", "nvprims_nvfuser", "cudagraphs", "ofi", "fx2trt", "onnxrt", "tensorrt", "aot_torchxla_trace_once", "ipex", "tvm"], "tooltip": "Dynamo backend selection (see https://pytorch.org/docs/stable/torch.compiler.html)."}),
+            "dynamo_backend": ({"default": "no", "choices": ["no", "eager", "aot_eager", "inductor", "aot_ts_nvfuser", "nvprims_nvfuser", "cudagraphs", "ofi", "fx2trt", "onnxrt", "tensorrt", "aot_torchxla_trace_once", "ipex", "tvm"], "tooltip": "Dynamo backend selection (see https://pytorch.org/docs/stable/torch.compiler.html)."}),
             "multi_gpu": ("BOOLEAN", {"default": False, "tooltip": "Use distributed GPU training."})
             },
         }
