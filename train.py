@@ -333,7 +333,7 @@ class LoraTraininginComfy:
         print(f"Executing command: {command}")
 
         # Init progress bar
-        progress = ProgressBar(max_train_epochs)
+        pbar = ProgressBar(max_train_epochs)
         last_epoch = -1
 
         epoch_pattern = re.compile(r"current_epoch: (\d+), epoch: (\d+)")
@@ -347,7 +347,7 @@ class LoraTraininginComfy:
                     current_epoch = int(match.group(1)) + 1
 
                     if current_epoch > last_epoch:
-                        progress.update_absolute(current_epoch)
+                        pbar.update(1)
                         last_epoch = current_epoch
 
         print(f"Training complete")
