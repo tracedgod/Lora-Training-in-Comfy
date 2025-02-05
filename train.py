@@ -248,7 +248,7 @@ class LoraTraininginComfy:
         # Ext args
         ext_args.extend([
             f"--pretrained_model_name_or_path={ckpt_name}",
-            f"--train_data_dir={data_path}",
+            f"--train_data_dir={train_data_dir}",
             f"--resolution={resolution_width},{resolution_height}",
             f"--output_dir={output_dir}",
             f"--output_name={output_name}",
