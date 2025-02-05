@@ -326,7 +326,7 @@ class LoraTraininginComfy:
             raise FileNotFoundError(f"Training script not found at {nodespath}")
 
         # Base command
-        command = ("accelerate launch ")
+        command = (f"{sys.executable} accelerate launch ")
 
         # Add launch args
         command += " ".join(launch_args) + " "
