@@ -293,7 +293,6 @@ class LoraTraininginComfy:
             "--max_bucket_reso=1024",
             "--keep_tokens=0",
             "--xformers",
-            "--shuffle_caption",
             "--no_metadata",
             "--log_with=tensorboard",
         ])
@@ -308,6 +307,7 @@ class LoraTraininginComfy:
             
             ext_args.extend([
                 "--optimizer_type=AdamW8bit",
+                "--shuffle_caption",
             ])
 
         if train_script_name == "sdxl_train_network":
