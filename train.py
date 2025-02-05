@@ -192,6 +192,8 @@ class LoraTraininginComfy:
     def loratraining(self, ckpt_name, model_type, resolution_width, resolution_height, data_path, batch_size, max_train_epoches, save_every_n_epochs, output_name, clip_skip, output_dir, mixed_precision, dynamo_backend, multi_gpu):
         #free memory first of all
         TrainingUtils.free_memory()
+        launch_args.clear()
+        ext_args.clear()
 
         #transform backslashes into slashes for user convenience.
         train_data_dir = data_path.replace( "\\", "/")
@@ -256,7 +258,7 @@ class LoraTraininginComfy:
             f"--max_train_epoches={max_train_epoches}",
             f"--save_every_n_epochs={save_every_n_epochs}",
             "--optimizer_type=AdamW8bit",
-            "--learning_rate=1e-4"
+            "--learning_rate=1e-4",
             "--unet_lr=1e-4",
             "--text_encoder_lr=1e-5",
             "--lr_scheduler=cosine_with_restarts",
