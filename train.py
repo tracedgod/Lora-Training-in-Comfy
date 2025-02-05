@@ -290,7 +290,7 @@ class LoraTraininginComfy:
             "--caption_extension=\".txt\"",
             "--save_model_as safetensors",
             "--min_bucket_reso=256",
-            "--max_bucket_reso=1584",
+            "--max_bucket_reso=1024",
             "--keep_tokens=0",
             "--xformers",
             "--shuffle_caption",
