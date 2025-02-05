@@ -274,7 +274,6 @@ class LoraTraininginComfy:
             "--max_token_length=225",
             "--caption_extension=.txt",
             "--xformers",
-            "keep_tokens",
             "--shuffle_caption",
             "--enable_bucket",
             "--no_metadata",
