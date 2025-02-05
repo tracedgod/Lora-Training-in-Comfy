@@ -281,7 +281,6 @@ class LoraTraininginComfy:
             f"--output_name={output_name}",
             f"--train_batch_size={batch_size}",
             f"--save_every_n_epochs={save_every_n_epochs}",
-            "--optimizer_type=AdamW8bit",
             f"--mixed_precision={mixed_precision}",
             "--save_precision=fp16",
             f"--seed={theseed}",
@@ -306,9 +305,20 @@ class LoraTraininginComfy:
 
             if model_type == "sd2.0":
                 ext_args.append("--v2")
+            
+            ext_args.extend([
+                "--optimizer_type=AdamW8bit",
+            ])
 
-        elif train_script_name == "sdxl_train_network":
-            print("placeholder")
+        if train_script_name == "sdxl_train_network":
+                # Set some extra args specific to SDXL training (see https://github.com/kohya-ss/sd-scripts/blob/main/docs/train_SDXL-en.md)
+                ext_args.extend([
+                    "--network_train_unet_only",
+                    "--gradient_checkpointing",
+                    "--cache_text_encoder_outputs"
+                    "--optimizer_type=AdaFactor",
+                    "--bucket_reso_steps=32",
+                ])
 
         # Get the training script path
         nodespath, sd_script_dir = TrainingUtils.get_train_script(train_script_name)

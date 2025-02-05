@@ -12,9 +12,9 @@ class Install:
     @staticmethod
     def install():
         subprocess.run(
-            ['git', 'submodule', 'update', '--init', '--recursive'],
+            ["git", "submodule", "update", "--init", "--recursive"],
             cwd=os.path.dirname(__file__),
-            shell=True,
+            shell=True
         )
 
     @staticmethod
