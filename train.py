@@ -317,7 +317,7 @@ class LoraTraininginComfy:
                     "--gradient_checkpointing",
                     "--cache_text_encoder_outputs",
                     "--optimizer_type=AdaFactor",
-                    "--bucket_reso_steps=32",
+                    "--optimizer_args \"scale_parameter=False\" \"relative_step=False\" \"warmup_init=False\"",
                 ])
 
         # Get the training script path
@@ -326,7 +326,7 @@ class LoraTraininginComfy:
             raise FileNotFoundError(f"Training script not found at {nodespath}")
 
         # Base command
-        command = (f"{sys.executable} -m accelerate.commands.launch ")
+        command = ("accelerate launch ")
 
         # Add launch args
         command += " ".join(launch_args) + " "
