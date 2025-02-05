@@ -21,8 +21,8 @@ reg_data_dir = "" # directory for regularization images | 正则化数据集路�
 # Network settings | 网络设置
 #network_module = "networks.lora" # 在这里将会设置训练的网络种类，默认为 networks.lora 也就是 LoRA 训练。如果你想训练 LyCORIS（LoCon、LoHa） 等，则修改这个值为 lycoris.kohya
 #network_weights = "" # pretrained weights for LoRA network | 若需要从已有的 LoRA 模型上继续训练，请填写 LoRA 模型路径。
-network_dim = 32 # network dim | 常用 4~128，不是越大越好
-network_alpha = 32 # network alpha | 常用与 network_dim 相同的值或者采用较小的值，如 network_dim的一半 防止下溢。默认值为 1，使用较小的 alpha 需要提升学习率。
+#network_dim = 32 # network dim | 常用 4~128，不是越大越好
+#network_alpha = 32 # network alpha | 常用与 network_dim 相同的值或者采用较小的值，如 network_dim的一半 防止下溢。默认值为 1，使用较小的 alpha 需要提升学习率。
 
 # Train related params | 训练相关参数
 # resolution = "512,512" # image resolution w,h. 图片分辨率，宽,高。支持非正方形，但必须是 64 倍数。
@@ -32,11 +32,11 @@ network_alpha = 32 # network alpha | 常用与 network_dim 相同的值或者采
 
 #train_unet_only = 0 # train U-Net only | 仅训练 U-Net，开启这个会牺牲效果大幅减少显存使用。6G显存可以开启
 #train_text_encoder_only = 0 # train Text Encoder only | 仅训练 文本编码器
-stop_text_encoder_training = 0 # stop text encoder training | 在第 N 步时停止训练文本编码器
+#stop_text_encoder_training = 0 # stop text encoder training | 在第 N 步时停止训练文本编码器
 
-noise_offset = 0 # noise offset | 在训练中添加噪声偏移来改良生成非常暗或者非常亮的图像，如果启用，推荐参数为 0.1
-keep_tokens = 0 # keep heading N tokens when shuffling caption tokens | 在随机打乱 tokens 时，保留前 N 个不变。
-min_snr_gamma = 0 # minimum signal-to-noise ratio (SNR) value for gamma-ray | 伽马射线事件的最小信噪比（SNR）值  默认为 0
+#noise_offset = 0 # noise offset | 在训练中添加噪声偏移来改良生成非常暗或者非常亮的图像，如果启用，推荐参数为 0.1
+#keep_tokens = 0 # keep heading N tokens when shuffling caption tokens | 在随机打乱 tokens 时，保留前 N 个不变。
+#min_snr_gamma = 0 # minimum signal-to-noise ratio (SNR) value for gamma-ray | 伽马射线事件的最小信噪比（SNR）值  默认为 0
 
 # Learning rate | 学习率
 #lr = "1e-4" # learning rate | 学习率，在分别设置下方 U-Net 和 文本编码器 的学习率时，该参数失效
@@ -54,33 +54,33 @@ min_snr_gamma = 0 # minimum signal-to-noise ratio (SNR) value for gamma-ray | �
 #save_model_as = "safetensors" # model save ext | 模型保存格式 ckpt, pt, safetensors
 
 # Resume training state | 恢复训练设置
-save_state = 0 # save training state | 保存训练状态 名称类似于 <output_name>-??????-state ?????? 表示 epoch 数
-resume = "" # resume from state | 从某个状态文件夹中恢复训练 需配合上方参数同时使用 由于规范文件限制 epoch 数和全局步数不会保存 即使恢复时它们也从 1 开始 与 network_weights 的具体实现操作并不一致
+#save_state = 0 # save training state | 保存训练状态 名称类似于 <output_name>-??????-state ?????? 表示 epoch 数
+#resume = "" # resume from state | 从某个状态文件夹中恢复训练 需配合上方参数同时使用 由于规范文件限制 epoch 数和全局步数不会保存 即使恢复时它们也从 1 开始 与 network_weights 的具体实现操作并不一致
 
 # 其他设置
-min_bucket_reso = 256 # arb min resolution | arb 最小分辨率
-max_bucket_reso = 1584 # arb max resolution | arb 最大分辨率
-persistent_data_loader_workers = 1 # persistent dataloader workers | 保留加载训练集的worker，减少每个 epoch 之间的停顿
+#min_bucket_reso = 256 # arb min resolution | arb 最小分辨率
+#max_bucket_reso = 1584 # arb max resolution | arb 最大分辨率
+#persistent_data_loader_workers = 1 # persistent dataloader workers | 保留加载训练集的worker，减少每个 epoch 之间的停顿
 #clip_skip = 2 # clip skip | 玄学 一般用 2
 #multi_gpu = 0 # multi gpu | 多显卡训练 该参数仅限在显卡数 >= 2 使用
 #lowram = 0 # lowram mode | 低内存模式 该模式下会将 U-net 文本编码器 VAE 转移到 GPU 显存中 启用该模式可能会对显存有一定影响
 
 # LyCORIS 训练设置
-algo = "lora" # LyCORIS network algo | LyCORIS 网络算法 可选 lora、loha、lokr、ia3、dylora。lora即为locon
-conv_dim = 4 # conv dim | 类似于 network_dim，推荐为 4
-conv_alpha = 4 # conv alpha | 类似于 network_alpha，可以采用与 conv_dim 一致或者更小的值
-dropout = "0"  # dropout | dropout 概率, 0 为不使用 dropout, 越大则 dropout 越多，推荐 0~0.5， LoHa/LoKr/(IA)^3 暂时不支持
+#algo = "lora" # LyCORIS network algo | LyCORIS 网络算法 可选 lora、loha、lokr、ia3、dylora。lora即为locon
+#conv_dim = 4 # conv dim | 类似于 network_dim，推荐为 4
+#conv_alpha = 4 # conv alpha | 类似于 network_alpha，可以采用与 conv_dim 一致或者更小的值
+#dropout = "0"  # dropout | dropout 概率, 0 为不使用 dropout, 越大则 dropout 越多，推荐 0~0.5， LoHa/LoKr/(IA)^3 暂时不支持
 
 # 远程记录设置
-use_wandb = 0 # enable wandb logging | 启用wandb远程记录功能
-wandb_api_key = "" # wandb api key | API，通过 https://wandb.ai/authorize 获取
-log_tracker_name = "" # wandb log tracker name | wandb项目名称,留空则为"network_train"
+#use_wandb = 0 # enable wandb logging | 启用wandb远程记录功能
+#wandb_api_key = "" # wandb api key | API，通过 https://wandb.ai/authorize 获取
+#log_tracker_name = "" # wandb log tracker name | wandb项目名称,留空则为"network_train"
 
 #output_dir = ''
 logging_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
-log_prefix = ''
+#log_prefix = ''
 # mixed_precision = 'fp16'
-caption_extension = '.txt'
+#caption_extension = '.txt'
 
 launch_args = []
 ext_args = []
@@ -146,14 +146,15 @@ class TrainingUtils:
 
     @staticmethod
     def get_available_torch_devices():
-        '''Gets the amount of available Torch devices'''
+        '''Gets the total amount of available Torch devices'''
         return torch.cuda.device_count()
 
     @staticmethod
     def is_bf16_supported():
-        '''Checks if the GPU is NVIDIA Ampere or newer (Compute Capability >= 8.0)'''
+        '''Checks if the GPU is NVIDIA Ampere or newer (CUDA compute capability >= 8.0)'''
         if torch.cuda.is_available():
             major, minor = torch.cuda.get_device_capability()
+            print(f"CUDA compute version detected: {major}.{minor}")
             return major >= 8
         return False
     
@@ -163,6 +164,12 @@ class TrainingUtils:
         return version.parse(torch.__version__) >= version.parse("1.10.0")
 
 class LoraTraininginComfy:
+    input_dir = folder_paths.get_input_directory()
+    output_dir = folder_paths.get_output_directory()
+    checkpoints = folder_paths.get_filename_list("checkpoints")
+    model_types = ["sd1.5", "sd2.0", "sdxl", "sd3", "flux"]
+    precision_types = ["no", "fp16", "bf16"]
+
     def __init__(self):
         pass
     
@@ -170,30 +177,32 @@ class LoraTraininginComfy:
     def INPUT_TYPES(s):
          return {
             "required": {
-            "ckpt_name": (folder_paths.get_filename_list("checkpoints"), ),
-            "model_type": (["sd1.5", "sd2.0", "sdxl", "sd3", "flux"], ),
-            "resolution_width": ("INT", {"default": 1024, "step": 64, "tooltip": "X resolution value"}),
-            "resolution_height": ("INT", {"default": 1024, "step": 64, "tooltip": "Y resolution value"}),
-            "data_path": ("STRING", {"default": "Insert path of image folders"}),
-			"batch_size": ("INT", {"default": 1, "min":1}),
+            "ckpt_name": (s.checkpoints, {"tooltip":"The checkpoint to train the LoRA against."}),
+            "model_type": (s.model_types, {"tooltip":"The type of model being used."}),
+            "resolution_width": ("INT", {"default": 1024, "step": 64, "tooltip":"Resolution width."}),
+            "resolution_height": ("INT", {"default": 1024, "step": 64, "tooltip":"Resolution height."}),
+            "data_path": ("STRING", {"default":f"{s.input_dir}", "tooltip":"Path to the training data."}),
+			"batch_size": ("INT", {"default": 1, "min":1, "tooltip":"Batch size to use during training."}),
             "max_train_epochs": ("INT", {"default":10, "min":1, "tooltip": "Max epochs to run during training session."}),
             "save_every_n_epochs": ("INT", {"default":10, "min":1, "tooltip": "How many epochs to run before saving a copy of the LoRA."}),
-            "output_name": ("STRING", {"default":'Desired name for LoRA.'}),
-            "clip_skip": ("INT", {"default":2, "min":1, "tooltip": "Controls how early the processing of prompt by clip network should be stopped (Option is ignored for sdxl)."}),
-            "mixed_precision": (["no", "fp16", "bf16"], ),
-            "output_dir": ("STRING", {"default":'models/loras'}),
-            "dynamo_backend": (["no", "eager", "aot_eager", "inductor", "aot_ts_nvfuser", "nvprims_nvfuser", "cudagraphs", "ofi", "fx2trt", "onnxrt", "tensorrt", "aot_torchxla_trace_once", "ipex", "tvm"], ),
+            "output_name": ("STRING", {"default":"", "tooltip":"Desired name for LoRA."}),
+            "clip_skip": ("INT", {"default":2, "min":1, "tooltip": "Controls how early the processing of prompt by clip network should be stopped."}),
+            "mixed_precision": (s.precision_types, {"tooltip":"Use mixed precision during training."}),
+            "output_dir": ("STRING", {"default":f"{s.output_dir}/loras", "tooltip":"Path for the finished LoRA."}),
             "multi_gpu": ("BOOLEAN", {"default": False, "tooltip": "Use distributed GPU training."})
             },
         }
 
     RETURN_TYPES = ()
     RETURN_NAMES = ()
+
     FUNCTION = "loratraining"
+    
     OUTPUT_NODE = True
+    
     CATEGORY = "LJRE/LORA"
     
-    def loratraining(self, ckpt_name, model_type, resolution_width, resolution_height, data_path, batch_size, max_train_epochs, save_every_n_epochs, output_name, clip_skip, output_dir, mixed_precision, dynamo_backend, multi_gpu):
+    def loratraining(self, ckpt_name, model_type, resolution_width, resolution_height, data_path, batch_size, max_train_epochs, save_every_n_epochs, output_name, clip_skip, output_dir, mixed_precision, multi_gpu):
         #free memory first of all
         TrainingUtils.free_memory()
 
@@ -234,7 +243,7 @@ class LoraTraininginComfy:
         launch_args.extend([
             "--num_machines=1",
             f"--mixed_precision={mixed_precision}",
-            f"--dynamo_backend={dynamo_backend}",
+            "--dynamo_backend=no",
             f"--num_cpu_threads_per_process=8",
         ])
 
@@ -319,7 +328,7 @@ class LoraTraininginComfy:
         command += " ".join(ext_args)
 
         print(f"Executing command: {command}")
-        subprocess.run(command, shell=True, cwd=sd_script_dir)
+        subprocess.run(command, shell=True)
         print(f"Training complete")
         return ()
 
@@ -526,8 +535,11 @@ class TensorboardAccess:
 
     RETURN_TYPES = ()
     RETURN_NAMES = ()
+
     FUNCTION = "opentensorboard"
+
     OUTPUT_NODE = True
+
     CATEGORY = "LJRE/LORA"
 
     def opentensorboard(self):
