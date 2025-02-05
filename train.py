@@ -104,6 +104,10 @@ class TrainingUtils:
             # Clear cache
             model_management.soft_empty_cache()
 
+            # Clear args lists
+            launch_args.clear()
+            ext_args.clear()
+
         except Exception as e:
             print(f"Warning: Failed to free memory before training: {e}")
 
@@ -192,8 +196,9 @@ class LoraTraininginComfy:
     def loratraining(self, ckpt_name, model_type, resolution_width, resolution_height, data_path, batch_size, max_train_epochs, save_every_n_epochs, output_name, clip_skip, output_dir, mixed_precision, dynamo_backend, multi_gpu):
         #free memory first of all
         TrainingUtils.free_memory()
-        launch_args.clear()
-        ext_args.clear()
+
+        # Get the full path to our Pretrained Model
+        pretrained_model = folder_paths.get_full_path("checkpoints", ckpt_name)
 
         #transform backslashes into slashes for user convenience.
         train_data_dir = data_path.replace( "\\", "/")
@@ -247,39 +252,41 @@ class LoraTraininginComfy:
 
         # Ext args
         ext_args.extend([
-            f"--pretrained_model_name_or_path={ckpt_name}",
+            "--enable_bucket",
+            f"--pretrained_model_name_or_path={pretrained_model}",
             f"--train_data_dir={train_data_dir}",
-            f"--resolution={resolution_width},{resolution_height}",
             f"--output_dir={output_dir}",
-            f"--output_name={output_name}",
             f"--logging_dir={logging_dir}",
-            f"--log_prefix={output_name}"
-            f"--train_batch_size={batch_size}",
+            f"--log_prefix={output_name}",
+            f"--resolution={resolution_width},{resolution_height}",
+            "--network_module=networks.lora",
             f"--max_train_epochs={max_train_epochs}",
-            f"--save_every_n_epochs={save_every_n_epochs}",
-            "--optimizer_type=AdamW8bit",
             "--learning_rate=1e-4",
             "--unet_lr=1e-4",
             "--text_encoder_lr=1e-5",
             "--lr_scheduler=cosine_with_restarts",
             "--lr_warmup_steps=0",
             "--lr_scheduler_num_cycles=1",
-            "--network_module=networks.lora",
             "--network_dim=32",
             "--network_alpha=32",
+            f"--output_name={output_name}",
+            f"--train_batch_size={batch_size}",
+            f"--save_every_n_epochs={save_every_n_epochs}",
+            "--optimizer_type=AdamW8bit",
+            f"--mixed_precision={mixed_precision}",
             "--save_precision=fp16",
             f"--seed={theseed}",
             "--cache_latents",
             "--prior_loss_weight=1", 
             "--max_token_length=225",
-            "--caption_extension=.txt",
-            "--xformers",
-            "--shuffle_caption",
-            "--enable_bucket",
-            "--no_metadata",
+            "--caption_extension=\".txt\"",
+            "--save_model_as safetensors",
             "--min_bucket_reso=256",
             "--max_bucket_reso=1584",
-            "--save_model_as safetensors",
+            "--keep_tokens=0",
+            "--xformers",
+            "--shuffle_caption",
+            "--no_metadata",
             "--log_with=tensorboard",
         ])
 
@@ -294,17 +301,13 @@ class LoraTraininginComfy:
         elif train_script_name == "sdxl_train_network":
             print("placeholder")
 
-        pretrained_model = folder_paths.get_full_path("checkpoints", ckpt_name)
-
         # Get the training script path
         nodespath, sd_script_dir = TrainingUtils.get_train_script(train_script_name)
         if not os.path.exists(nodespath):
             raise FileNotFoundError(f"Training script not found at {nodespath}")
 
         # Base command
-        command = (
-            f"{sys.executable} -m accelerate.commands.launch "
-        )
+        command = (f"{sys.executable} -m accelerate.commands.launch ")
 
         # Add launch args
         command += " ".join(launch_args) + " "
@@ -313,12 +316,11 @@ class LoraTraininginComfy:
         command += (f"\"{nodespath}\" ")
 
         # Add script arguments
-        if ext_args:
-            command += " " + " ".join(ext_args)
+        command += " ".join(ext_args)
 
         print(f"Executing command: {command}")
         subprocess.run(command, shell=True, cwd=sd_script_dir)
-        print(f"Train finished")
+        print(f"Training complete")
         return ()
 
 # class LoraTraininginComfyAdvanced:
