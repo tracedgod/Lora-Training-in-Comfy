@@ -4,6 +4,8 @@ import os
 import sys
 import folder_paths
 import random
+import re
+from comfy.utils import ProgressBar
 from comfy import model_management
 import torch
 from packaging import version
@@ -325,20 +327,29 @@ class LoraTraininginComfy:
         if not os.path.exists(nodespath):
             raise FileNotFoundError(f"Training script not found at {nodespath}")
 
-        # Base command
-        command = (f"{sys.executable} accelerate launch ")
-
-        # Add launch args
-        command += " ".join(launch_args) + " "
-
-        # Add script path
-        command += (f"\"{nodespath}\" ")
-
-        # Add script arguments
-        command += " ".join(ext_args)
+        # Construct the command
+        command = f"{sys.executable} accelerate launch " + " ".join(launch_args) + f" \"{nodespath}\" " + " ".join(ext_args)
 
         print(f"Executing command: {command}")
-        subprocess.run(command, shell=True)
+
+        # Init progress bar
+        progress = ProgressBar(max_train_epochs)
+        last_epoch = -1
+
+        epoch_pattern = re.compile(r"current_epoch: (\d+), epoch: (\d+)")
+
+        with subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1) as proc:
+            for line in proc.stdout:
+                print(line, end="")
+
+                match = epoch_pattern.search(line)
+                if match:
+                    current_epoch = int(match.group(1)) + 1
+
+                    if current_epoch > last_epoch:
+                        progress.update_absolute(current_epoch)
+                        last_epoch = current_epoch
+
         print(f"Training complete")
         return ()
 
