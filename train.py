@@ -315,7 +315,7 @@ class LoraTraininginComfy:
                 ext_args.extend([
                     "--network_train_unet_only",
                     "--gradient_checkpointing",
-                    "--cache_text_encoder_outputs"
+                    "--cache_text_encoder_outputs",
                     "--optimizer_type=AdaFactor",
                     "--bucket_reso_steps=32",
                 ])
