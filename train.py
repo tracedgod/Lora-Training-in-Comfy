@@ -323,12 +323,12 @@ class LoraTraininginComfy:
                 ])
 
         # Get the training script path
-        nodespath, sd_script_dir = TrainingUtils.get_train_script(train_script_name)
+        nodespath = TrainingUtils.get_train_script(train_script_name)
         if not os.path.exists(nodespath):
             raise FileNotFoundError(f"Training script not found at {nodespath}")
 
         # Construct the command
-        command = "accelerate launch " + " ".join(launch_args) + f" \"{nodespath}\" " + " ".join(ext_args)
+        command = f"\"{sys.executable}\" accelerate launch " + " ".join(launch_args) + f" \"{nodespath}\" " + " ".join(ext_args)
 
         print(f"Executing command: {command}")
 
