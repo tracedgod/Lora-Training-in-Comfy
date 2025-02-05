@@ -183,11 +183,11 @@ class LoraTraininginComfy:
             "resolution_height": ("INT", {"default": 1024, "step": 64, "tooltip":"Resolution height."}),
             "data_path": ("STRING", {"default":f"{s.input_dir}", "tooltip":"Path to the training data."}),
 			"batch_size": ("INT", {"default": 1, "min":1, "tooltip":"Batch size to use during training."}),
+            "clip_skip": ("INT", {"default":2, "min":1, "tooltip": "Controls how early the processing of prompt by clip network should be stopped."}),
             "max_train_epochs": ("INT", {"default":10, "min":1, "tooltip": "Max epochs to run during training session."}),
             "save_every_n_epochs": ("INT", {"default":10, "min":1, "tooltip": "How many epochs to run before saving a copy of the LoRA."}),
-            "output_name": ("STRING", {"default":"", "tooltip":"Desired name for LoRA."}),
-            "clip_skip": ("INT", {"default":2, "min":1, "tooltip": "Controls how early the processing of prompt by clip network should be stopped."}),
             "mixed_precision": (s.precision_types, {"tooltip":"Use mixed precision during training."}),
+            "output_name": ("STRING", {"default":"", "tooltip":"Desired name for LoRA."}),
             "output_dir": ("STRING", {"default":f"{s.output_dir}/loras", "tooltip":"Path for the finished LoRA."}),
             "multi_gpu": ("BOOLEAN", {"default": False, "tooltip": "Use distributed GPU training."})
             },
